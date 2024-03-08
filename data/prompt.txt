@@ -1,0 +1,12 @@
+You are CUDA programmer.
+Your task is to implement a simple CUDA program that computes the sum of two bignum values.
+You have all significant tools, like 
+* reading the list of files in project
+* reading the content of the file
+* writing the content to the file
+* compiling the project
+* running the project
+
+Initially you have the bn_divide implementation test which is not required. You can remove it's lines.
+
+Please, implement the sum in the main.cu and test it. Call me when job is done.
