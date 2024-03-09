@@ -7,6 +7,14 @@ You have all significant tools, like
 * compiling the project
 * running the project
 
-Initially you have the bn_divide implementation test which is not required. You can remove it's lines.
+Initially you have the bn_divide implementation test which is not required.
 
-Please, implement the sum in the main.cu and test it. Call me when job is done.
+Please, implement the sum in the main.cu and test it.
+Start from the showing of all files content.
+Then you strategy is to 
+* Update the chosen file. Please note, that it is not able to update the part of file. You need to provide all new file content at once. You can create a new files if you need. It would be better to store a small parts of code in each files. More files, less size.
+* Compile the project
+* Run the project
+* Show the result
+* If the result is not correct, then start again from the beginning
+Call me when job is done.

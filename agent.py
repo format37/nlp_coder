@@ -41,8 +41,6 @@ class ConfigLoader:
     def __init__(self, config_filename='config.json'):
         self.config_filename = config_filename
         self.config = self.load_config()
-        """if self.config['openai']['api_key']=='':
-            self.config['openai']['api_key']=input("Please enter your OpenAI API key: ")"""
 
     def load_config(self):
         with open(self.config_filename, 'r') as file:
@@ -78,10 +76,11 @@ class ChatAgent:
         )"""
         llm = Ollama(model="mistral")
         # requests_tools = load_tools(["requests_all"])
-        shell_tool = ShellTool()
-        shell_tool.description = shell_tool.description + f"args {shell_tool.args}".replace(
+        # shell_tool = ShellTool()
+        """shell_tool.description = shell_tool.description + f"args {shell_tool.args}".replace(
             "{", "{{"
-        ).replace("}", "}}")
+        ).replace("}", "}}")"""
+        
         """Tool(
                 args_schema=DocumentInput,
                 name='Additional context',
@@ -99,8 +98,8 @@ class ChatAgent:
             ),
             StructuredTool.from_function(
                 func=show_files_content,
-                name="Show the content of files, from the file list according to the mask",
-                description="You need to provide a mask to filter the files. * will show all files. The content of the files is returned.",
+                name="Show files content",
+                description="Show the content of files, from the file list according to the mask. You need to provide a mask to filter the files. * will show all files. The content of the files is returned.",
                 args_schema=show_files_content_args,
                 return_direct=False,
                 # coroutine= ... <- you can specify an async method if desired as well
@@ -116,7 +115,7 @@ class ChatAgent:
             StructuredTool.from_function(
                 func=update_file,
                 name="Update file",
-                description="The function updates the file in the project folder. Use [ and ] symbols to mark the file path. The input should be in the format: [file_path]content.",
+                description="The function updates the file in the project folder. Use [ and ] symbols to mark the file path. The input should be in the format: [file_path]content. Please note, that updating does not adding information. Updating is rewriting the file. This meand that you need to provide a full file implementation.",
                 args_schema=update_file_args,
                 return_direct=False,
                 # coroutine= ... <- you can specify an async method if desired as well
