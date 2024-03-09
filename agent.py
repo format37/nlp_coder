@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from langchain.agents import Tool, initialize_agent
 # from langchain.agents import load_tools
 # from langchain.chains import RetrievalQA
-# from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.document_loaders import TextLoader, DirectoryLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -21,6 +21,8 @@ from langchain.schema import HumanMessage, SystemMessage, AIMessage
 # from langchain.pydantic_v1 import BaseModel, Field
 from langchain.tools import BaseTool, StructuredTool, tool
 from langchain_community.llms import Ollama
+from langchain_anthropic import ChatAnthropic
+# from langchain_anthropic import AnthropicLLM
 from coder_tools import (
     get_file_list_args,
     get_file_list,
@@ -69,12 +71,14 @@ class ChatAgent:
         self.agent = self.initialize_agent()
 
     def initialize_agent(self):
-        """llm = ChatOpenAI(
+        llm = ChatOpenAI(
             openai_api_key=self.config['openai']['api_key'],
             model=self.config['openai']['model'],
             temperature=self.config['openai']['temperature']
-        )"""
-        llm = Ollama(model="mistral")
+        )
+        # llm = Ollama(model="mistral")
+        # llm = ChatAnthropic(model='claude-3-opus-20240229')
+
         # requests_tools = load_tools(["requests_all"])
         # shell_tool = ShellTool()
         """shell_tool.description = shell_tool.description + f"args {shell_tool.args}".replace(
@@ -115,7 +119,7 @@ class ChatAgent:
             StructuredTool.from_function(
                 func=update_file,
                 name="Update file",
-                description="The function updates the file in the project folder. Use [ and ] symbols to mark the file path. The input should be in the format: [file_path]content. Please note, that updating does not adding information. Updating is rewriting the file. This meand that you need to provide a full file implementation.",
+                description="The function updates the file in the project folder. Use <<< and >>> words to mark the file path. The input should be in the format: <<<file_path>>>content. Please note, that updating does not adding information. Updating is rewriting the file. This meand that you need to provide a full file implementation.",
                 args_schema=update_file_args,
                 return_direct=False,
                 # coroutine= ... <- you can specify an async method if desired as well
@@ -123,7 +127,7 @@ class ChatAgent:
             StructuredTool.from_function(
                 func=cuda_compilation,
                 name="Cuda compilation",
-                description="The function compiles the  source/main.cu file.",
+                description="The function compiles the source/main.cu file. As a parameter you need to provide empty string.",
                 args_schema=cuda_compilation_args,
                 return_direct=False,
                 # coroutine= ... <- you can specify an async method if desired as well
@@ -131,7 +135,7 @@ class ChatAgent:
             StructuredTool.from_function(
                 func=run_program,
                 name="Run program",
-                description="The function runs the program.",
+                description="The function runs the program. As a parameter you need to provide empty string.",
                 args_schema=run_program_args,
                 return_direct=False,
                 # coroutine= ... <- you can specify an async method if desired as well
@@ -153,10 +157,13 @@ class ChatAgent:
             user_input = file.read()
         while True:            
             # Update the chat history with the User input
-            chat_history.append(HumanMessage(content=user_input))
-            response = self.agent.run(input=user_input, chat_history=chat_history)            
+            # chat_history.append(HumanMessage(content=user_input))
+            # print(f"chat_history: {chat_history}")
+            response = self.agent.run(input=user_input, chat_history=chat_history)
+            # chat_history.append(HumanMessage(content=user_input))
+            # print(f"chat_history: {chat_history}")
             # Update the chat history with the Agent response
-            chat_history.append(AIMessage(content=response))
+            # chat_history.append(AIMessage(content=response))
             user_input = input("You: ")
             if user_input.lower() in ['exit', 'quit']:
                 break

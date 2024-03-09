@@ -1,20 +1,22 @@
 You are CUDA programmer.
-Your task is to implement a simple CUDA program that computes the sum of two bignum values.
-You have all significant tools, like 
-* reading the list of files in project
-* reading the content of the file
-* writing the content to the file
-* compiling the project
-* running the project
-
-Initially you have the bn_divide implementation test which is not required.
-
-Please, implement the sum in the main.cu and test it.
-Start from the showing of all files content.
-Then you strategy is to 
+You have environment including availabilities:
 * Update the chosen file. Please note, that it is not able to update the part of file. You need to provide all new file content at once. You can create a new files if you need. It would be better to store a small parts of code in each files. More files, less size.
 * Compile the project
 * Run the project
 * Show the result
+
+Initially you have the bn_add implementation test which is work correctly.
+
+Your task is to add some significant cases for testing the bn_add implementation.
+Please, add cases containing two-words and negative numbers scenarios.
+
+Your strategy is to 
+* Update the chosen file. You need to provide a full file content including all significant includes and full function definition.
+* Compile the project
+* Run the project
+* Show the result
 * If the result is not correct, then start again from the beginning
-Call me when job is done.
+Call me when job is done. The goal is a new test cases in test_add.h file and test results.
+
+Start from the "Show files content" with mask * to get all files.
+It will give you understanding of the project structure and content and you will  know what to update next.

@@ -1,7 +1,8 @@
 import os
 import fnmatch
 from pydantic import BaseModel, Field
-import re
+from typing import Optional
+# import re
 import subprocess
 
 
@@ -53,27 +54,29 @@ def show_files_content(mask):
     Each file starts with \n<<<full_file_path>>>\n and then the content of the file.
     """
     project_dir = "./data/project"
+    # Remove f'{project_dir}/out/program' if exists
+    program_path = f'{project_dir}/out/program'
+    if os.path.exists(program_path):
+        os.remove(program_path)
     file_list = get_file_list().split("\n")  # Get the list of files from get_file_list()
     file_content = ""
-
     for file_path in file_list:
         if file_path.endswith("/"):
             continue  # Skip directories
-
         file_name = os.path.basename(file_path)
-
         if mask == "*" or fnmatch.fnmatch(file_name, mask):
             file_content += f"\n<<<{file_path}>>>\n"
-
             file_full_path = os.path.join(project_dir, file_path)
             try:
-                with open(file_full_path, "r") as file:
+                with open(file_full_path, "r", encoding="latin-1") as file:
                     content = file.read()
                     file_content += content + "\n"
             except IOError:
                 file_content += "Error: Unable to read the file.\n"
-
     return file_content
+
+
+
 
 
 class remove_file_args(BaseModel):
@@ -95,16 +98,16 @@ def remove_file(file_path):
 class update_file_args(BaseModel):
     # file_path: str = Field(description="""Path to the file to be updated.""")
     # content: str = Field(description="""Content to be written to the file.""")
-    file_path_and_content: str = Field(description="""Path to the file to be updated and content to be written to the file. For example, [file_path]content""")
+    file_path_and_content: str = Field(description="""Path to the file to be updated and content to be written to the file. For example, <<<file_path>>>content""")
 
 def update_file(file_path_and_content):
     """
     This function updates a file in the ./data/project directory.
     """
-    # find first "]" and split the string
-    args = file_path_and_content.strip().split("]")
+    # find first ">>>" and split the string
+    args = file_path_and_content.strip().split(">>>")
     if len(args) == 2:
-        file_path = args[0][1:]
+        file_path = args[0][3:]
         content = args[1]
     else:
         return f"Error: Invalid input format. The input should be in the format: [file_path]content. args: {args}. Length: {len(args)}"
@@ -119,7 +122,11 @@ def update_file(file_path_and_content):
         return f"Error: Unable to update the file: {file_path}"
 
 class cuda_compilation_args(BaseModel):
-    param: str = Field(description="""Provide empty string. There is no input required.""")
+    param: str = Field(description="""Provide always empty string.""")
+    # param: Optional[str] = Field(
+    #     None, 
+    #     description="""Provide an empty string or None. Both inputs are acceptable."""
+    #     )
 
 def cuda_compilation(param=None):
     """
