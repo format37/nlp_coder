@@ -10,7 +10,7 @@ __device__ void bn_print(const char* msg, BIGNUM* a) {
     for (int i = a->top - 1; i >= 0; i--) {
         // Print words up to top - 1 with appropriate formatting
         if (i == a->top - 1) {
-            printf("%llx", a->d[i]);
+            printf("%llx ", a->d[i]);
         } else {
             printf(" %016llx", a->d[i]);
         }

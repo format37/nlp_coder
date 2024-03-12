@@ -56,8 +56,8 @@ __device__ int bn_div(BIGNUM *quotient, BIGNUM *remainder, BIGNUM *dividend, BIG
     convert_to_binary_array(dividend->d, binary_dividend, MAX_BIGNUM_WORDS);
     convert_to_binary_array(divisor->d, binary_divisor, MAX_BIGNUM_WORDS);
 
-    // binary_print_big_endian(">> binary_dividend", binary_dividend, total_bits);
-    // binary_print_big_endian(">> binary_divisor", binary_divisor, total_bits);
+    binary_print_big_endian(">> binary_dividend", binary_dividend, total_bits);
+    binary_print_big_endian(">> binary_divisor", binary_divisor, total_bits);
 
     // Call the binary division function
     // bn_div_binary(binary_dividend, binary_divisor, binary_quotient, binary_remainder);
@@ -71,8 +71,9 @@ __device__ int bn_div(BIGNUM *quotient, BIGNUM *remainder, BIGNUM *dividend, BIG
         divisor->top
         );
 
-    // bn_print_quotient("<< binary_quotient", quotient);
-    // binary_print_big_endian("<< binary_remainder", binary_remainder, total_bits);
+    //bn_print_quotient("<< binary_quotient", quotient);
+    binary_print_big_endian("<< binary_quotient", binary_quotient, total_bits);
+    binary_print_big_endian("<< binary_remainder", binary_remainder, total_bits);
 
     // Fix the 'top' fields of quotient and remainder
     quotient->top = get_bn_top_from_binary_array(binary_quotient, total_bits);
@@ -85,6 +86,11 @@ __device__ int bn_div(BIGNUM *quotient, BIGNUM *remainder, BIGNUM *dividend, BIG
     convert_back_to_bn_ulong(binary_quotient, quotient->d, quotient->top);
     convert_back_to_bn_ulong(binary_remainder, remainder->d, remainder->top);
 
+    bn_print("\n<< quotient: ", quotient);
+    //printf("# bignum quotient top: %d\n", quotient->top);
+    bn_print("<< remainder: ", remainder);
+    //printf("# bignum remainder top: %d\n", remainder->top);
+
     // Determine sign of quotient and remainder
     quotient->neg = dividend->neg ^ divisor->neg;
     remainder->neg = dividend->neg;
@@ -93,10 +99,7 @@ __device__ int bn_div(BIGNUM *quotient, BIGNUM *remainder, BIGNUM *dividend, BIG
     quotient->top = find_top(quotient, MAX_BIGNUM_WORDS);
     remainder->top = find_top(remainder, MAX_BIGNUM_WORDS);
 
-    /*bn_print("\n<< quotient: ", quotient);
-    printf("# bignum quotient top: %d\n", quotient->top);
-    bn_print("<< remainder: ", remainder);
-    printf("# bignum remainder top: %d\n", remainder->top);*/
+    
 
     return 1;
 }

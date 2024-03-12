@@ -13,7 +13,7 @@ __device__ void bn_div_binary(
     for (int i = 0; i < total_bits; ++i) {
         // Shift temp left by 1
         for (int j = 0; j < total_bits - 1; ++j) {
-            temp[j] = temp[j + 1];
+            temp[j] = temp[j+1];
         }
         temp[total_bits - 1] = dividend[i];
 
@@ -27,13 +27,13 @@ __device__ void bn_div_binary(
         }
 
         // Subtract divisor from temp if temp >= divisor
-        if (can_subtract) {
+        if(can_subtract) {
             quotient[i] = 1;
             for (int j = total_bits - 1; j >= 0; --j) {
                 temp[j] -= divisor[j];
-                if (temp[j] < 0) { // Borrow from the next bit if needed
+                if (temp[j] < 0) {  // Borrow from the next bit if needed
                     temp[j] += 2;
-                    temp[j - 1] -= 1;
+                    temp[j-1] -= 1;
                 }
             }
         } else {

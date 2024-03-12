@@ -122,10 +122,16 @@ void c_bn_div_test(BN_ULONG *A, BN_ULONG *B) {
     printf("\nBinary dividend: ");
     for (int i = 0; i < WORDS * BN_ULONG_NUM_BITS; ++i) {
         printf("%d", binary_A[i]);
+        if ((i + 1) % BN_ULONG_NUM_BITS == 0) {
+            printf("\n");
+        }
     }
     printf("\nBinary divisor: ");
     for (int i = 0; i < WORDS * BN_ULONG_NUM_BITS; ++i) {
         printf("%d", binary_B[i]);
+        if ((i + 1) % BN_ULONG_NUM_BITS == 0) {
+            printf("\n");
+        }
     }
     printf("\n");
     
@@ -135,10 +141,16 @@ void c_bn_div_test(BN_ULONG *A, BN_ULONG *B) {
     printf("\nBinary quotient: ");
     for (int i = 0; i < WORDS * BN_ULONG_NUM_BITS; ++i) {
         printf("%d", binary_quotient[i]);
+        if ((i + 1) % BN_ULONG_NUM_BITS == 0) {
+            printf("\n");
+        }
     }
     printf("\nBinary remainder: ");
     for (int i = 0; i < WORDS * BN_ULONG_NUM_BITS; ++i) {
         printf("%d", binary_remainder[i]);
+        if ((i + 1) % BN_ULONG_NUM_BITS == 0) {
+            printf("\n");
+        }
     }
     printf("\n");
 
@@ -150,19 +162,19 @@ void c_bn_div_test(BN_ULONG *A, BN_ULONG *B) {
 
     printf("A: ");
     for (int i = 0; i < WORDS; ++i) {
-        printf("%lx", A[i]);
+        printf("%016lx ", A[i]);
     }
     printf("\nB: ");
     for (int i = 0; i < WORDS; ++i) {
-        printf("%lx", B[i]);
+        printf("%016lx ", B[i]);
     }
     printf("\n# Quotient: ");
     for (int i = 0; i < WORDS; ++i) {
-        printf("%lx", quotient[i]);
+        printf("%016lx ", quotient[i]);
     }
     printf("\n# Remainder: ");
     for (int i = 0; i < WORDS; ++i) {
-        printf("%lx", remainder[i]);
+        printf("%016lx ", remainder[i]);
     }
     printf("\n");
 }
