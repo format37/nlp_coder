@@ -1,4 +1,0 @@
-export ANTHROPIC_API_KEY=
-export LANGCHAIN_API_KEY=
-export LANGCHAIN_TRACING_V2=true
-export LANGCHAIN_PROJECT="nlp_coder"
