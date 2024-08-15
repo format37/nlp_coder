@@ -1,2 +1,3 @@
 Please, implement a CUDA program that calculates the sum of two numbers in a single kernel. The function should take two arguments and return the sum of the two numbers.
 Place the function in a separate file. The main program should call the function and print the result.
+Implement unused variable to get the warning notification in the building script.

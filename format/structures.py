@@ -13,3 +13,7 @@ class Solution(BaseModel):
     build_script: str
     run_script: str
     run_timeout_seconds: int
+
+class Evaluation(BaseModel):
+    result_short_overview: str
+    task_complete: bool
