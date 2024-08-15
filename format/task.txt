@@ -1,5 +1,19 @@
 Draft:
 ```
+###
+# Elliptic Curve Point Addition Tester
+# This script implements elliptic curve arithmetic over a finite field
+# and generates random points for testing point addition operations.
+# The curve used is y^2 = x^3 + 2x + 2 (mod 17)
+#
+# Output Format:
+# Each line of output represents a single test case in the format:
+# Px Py Qx Qy (P+Q)x (P+Q)y (P+P)x (P+P)y
+# where P and Q are random points on the curve, and the results of
+# P+Q and P+P (point doubling) are shown.
+###
+import random
+
 def main():
     # Small prime for our field
     p = 17
@@ -16,6 +30,11 @@ def main():
             self.y = y
             self.a = a
             self.b = b
+
+        def is_on_curve(self):
+            if self.x is None or self.y is None:
+                return True
+            return (self.y**2) % p == (self.x**3 + self.a * self.x + self.b) % p
 
         def __add__(self, other):
             if self.a != other.a or self.b != other.b:
@@ -44,22 +63,27 @@ def main():
         def __str__(self):
             return f"({self.x}, {self.y})"
 
-    def test_point_addition():
-        # Two points on the curve y^2 = x^3 + 2x + 2 (mod 17)
-        P = Point(5, 1, a, b)
-        Q = Point(6, 3, a, b)
+    def generate_random_point():
+        while True:
+            x = random.randint(0, p-1)
+            y = random.randint(0, p-1)
+            point = Point(x, y, a, b)
+            if point.is_on_curve():
+                return point
 
-        print(f"P = {P}")
-        print(f"Q = {Q}")
+    def test_point_addition(num_tests):
+        for _ in range(num_tests):
+            P = generate_random_point()
+            Q = generate_random_point()
 
-        R = P + Q
-        print(f"P + Q = {R}")
+            R1 = P + Q
+            R2 = P + P
 
-        # Test point doubling
-        R = P + P
-        print(f"P + P = {R}")
+            result_str = f"{P.x} {P.y} {Q.x} {Q.y} {R1.x} {R1.y} {R2.x} {R2.y}"
+            print(result_str)
 
-    test_point_addition()
+    num_tests = 10
+    test_point_addition(num_tests)
 
 if __name__ == "__main__":
     main()
@@ -67,16 +91,37 @@ if __name__ == "__main__":
 
 Output:
 ```
-P = (5, 1)
-Q = (6, 3)
-P + Q = (10, 6)
-P + P = (6, 3)
+9 1 7 6 3 1 7 6
+...
+```
+That means that the input values are P = (9, 1); Q = (7, 6) and the output values are P + Q = (3, 1); P + P = (7, 6).
+
+This implementation can generate random test cases and results.
+Now please add feature to test the implementation.
+We need to have opportinuity not only generate test cases but test using cases.txt as input.
+
+cases.txt example:
+```
+9 1 7 6 3 1 7 6
+9 16 0 11 6 14 7 11
+5 1 10 6 3 1 6 3
+7 11 10 6 16 4 5 1
+9 16 0 11 6 14 7 11
+5 16 3 16 9 1 6 14
+3 1 16 13 7 11 13 7
+9 1 6 14 0 11 7 6
+0 6 5 16 16 13 9 1
+16 4 10 6 10 11 0 6
 ```
 
-Please, reqrite this to Jacobian coordinates. Please note, that the final answer should be in affine coordinates.
-
-Input values: P = (5, 1); Q = (6, 3)
-
-EXPECTED output: P + Q = (10, 6); P + P = (6, 3)
-
-Pay attention in comparison the EXPECTED output with the ACTUAL output. The task is complete ONLY when expected and actual outputs MATCH.
+When we run the script with `python3 task.py cases.txt` it should read the file and test the implementation with the given test cases.
+For the first line, input values are:
+```
+P = (9, 1)
+Q = (7, 6)
+```
+and the output values are:
+```
+P + Q = (3, 1)
+P + P = (7, 6)
+```

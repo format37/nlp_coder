@@ -65,7 +65,7 @@ def main():
 
             # Create project directory
             os.makedirs("projects", exist_ok=True)
-            project_dir = os.path.join("projects", solution.project_name)
+            project_dir = os.path.join("projects", solution.project_name.replace(" ", "_"))
             # Account the os.getcwd() in the project_dir
             project_dir = os.path.join(os.getcwd(), project_dir)
             # Create project directory
@@ -163,8 +163,12 @@ def main():
 
             # If current iteration is 0 Copy task.txt and system.txt from local to the project directory
             if current_iteration == 0:
-                os.system(f"cp task.txt {project_dir}")
-                os.system(f"cp system.txt {project_dir}")
+                cmd = f"cp task.txt {project_dir}/task.txt"
+                print(f'caling: {cmd}')
+                os.system(cmd)
+                cmd = f"cp system.txt {project_dir}/system.txt"
+                print(f'caling: {cmd}')
+                os.system()
 
             current_iteration += 1
 
