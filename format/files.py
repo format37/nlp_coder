@@ -33,10 +33,14 @@ def build_project(project_dir: str):
     if content == "#!/bin/bash\n# No build steps required":
         return 0, "No build required", ""
     
+    # Remove build.log if it exists
+    build_log_path = os.path.join(project_dir, 'build.log')
+    if os.path.exists(build_log_path):
+        os.remove(build_log_path)
+    
     result = subprocess.run([build_script_path], cwd=project_dir, capture_output=True, text=True)
     
     # Read the build log
-    build_log_path = os.path.join(project_dir, 'build.log')
     build_log_content = ""
     if os.path.exists(build_log_path):
         with open(build_log_path, 'r') as f:
@@ -47,10 +51,13 @@ def build_project(project_dir: str):
 def run_project(project_dir: str, timeout: int):
     run_script_path = os.path.join(project_dir, 'run.sh')
     try:
+        # Remove run.log if it exists
+        run_log_path = os.path.join(project_dir, 'run.log')
+        if os.path.exists(run_log_path):
+            os.remove(run_log_path)
         result = subprocess.run(['/bin/bash', run_script_path], cwd=project_dir, capture_output=True, text=True, timeout=timeout)
         print("The process has finished expectedly.")
         # Read the run log
-        run_log_path = os.path.join(project_dir, 'run.log')
         run_log_content = ""
         if os.path.exists(run_log_path):
             with open(run_log_path, 'r') as f:

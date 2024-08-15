@@ -1,5 +1,6 @@
 import os
 from openai import OpenAI
+import anthropic
 from structures import Solution, Evaluation
 from files import (
     create_project_files, 
@@ -18,7 +19,11 @@ def main():
     if "OPENAI_API_KEY" not in os.environ:
         os.environ["OPENAI_API_KEY"] = input("Enter your OpenAI API key (or Use 'export OPENAI_API_KEY=your-api-key' to set the API key): ")
 
-    client = OpenAI()
+    if "ANTHROPIC_API_KEY" not in os.environ:
+        os.environ["ANTHROPIC_API_KEY"] = input("Enter your Anthropic API key (or Use 'export ANTHROPIC_API_KEY=your-api-key) to set the API key: ")
+
+    client_openai = OpenAI()
+    client_anthropic = anthropic.Anthropic()
 
     # Read user input from task.txt
     with open("task.txt", "r") as f:
@@ -28,8 +33,11 @@ def main():
     if os.path.exists("log.txt"):
         os.remove("log.txt")
 
+    # Read system_content from system.txt
+    with open("system.txt", "r") as f:
+        system_content = f.read() # "You are a software engineer."
     messages=[
-            {"role": "system", "content": "You are a software engineer."},
+            {"role": "system", "content": system_content},
             {"role": "user", "content": f"{user_input}"}
         ]
 
@@ -38,12 +46,17 @@ def main():
 
     while not task_complete and current_iteration < run_count_limit:
         print(f"\nIteration: {current_iteration}")
-        completion = client.beta.chat.completions.parse(
+        completion = client_openai.beta.chat.completions.parse(
             model="gpt-4o-2024-08-06",
             messages = messages,
             response_format=Solution,
         )
         message = completion.choices[0].message
+        # Extract token usage (prompt, completion, and total tokens)
+        
+        token_usage = completion.usage
+        print(f"#### token_usage: {token_usage}")
+
         if message.parsed:
             # Log parsed message to log.txt
             with open("log.txt", "w") as f:
@@ -107,7 +120,7 @@ def main():
             # Evaluate solution
             print("\nEvaluating the solution...")
             user_input = f"Please, evaluate the solution: {solution_json}"
-            completion = client.beta.chat.completions.parse(
+            completion = client_openai.beta.chat.completions.parse(
                 model="gpt-4o-2024-08-06",
                 messages=[
                     {"role": "system", "content": "You are a software engineer."},
@@ -119,18 +132,39 @@ def main():
             message = completion.choices[0].message
             if message.parsed:
                 # Log parsed message to log.txt
-                with open("log.txt", "a") as f:
+                with open(f"{project_dir}/log.txt", "a") as f:
                     f.write(f"\n[{current_iteration}] {str(message.parsed)}")
                 evaluation = message.parsed
-                print(f"result_short_overview: {evaluation.result_short_overview}")
-                print(f"task_complete: {evaluation.task_complete}")
+                # print(f"result_short_overview: {evaluation.result_short_overview}")
+                # print(f"task_complete: {evaluation.task_complete}")
                 task_complete = evaluation.task_complete
-                user_answer = {"role": "user", "content": f"{evaluation.result_short_overview}. Task complete: {evaluation.task_complete}"}
+                user_content = f"Expected output: {evaluation.expected_output}\nActual output: {evaluation.actual_output}\nOverview: {evaluation.result_short_overview}\nTask complete: {evaluation.task_complete}"
+                if not task_complete:
+                    # Call anthropic to provide the user suggestions
+                    claude_message = client_anthropic.messages.create(
+                        model="claude-3-5-sonnet-20240620",
+                        # max_tokens=1000,
+                        # temperature=0,
+                        system="You are a software engineer. You have been asked to conclude what can we do next.",
+                        messages=[
+                            {
+                                "role": "user",
+                                "content": f"{user_content}. What can we do next?"
+                            }
+                        ]
+                    )
+                    user_content += claude_message.content
+                user_answer = {"role": "user", "content": user_content}
                 messages.append(user_answer)                
 
             # Dump messages into {current_iteration}_messages.json
-            with open(f"{current_iteration}_messages.json", "w") as f:
+            with open(f"{project_dir}/{current_iteration}_messages.json", "w") as f:
                 f.write(json.dumps(messages, indent=2))
+
+            # If current iteration is 0 Copy task.txt and system.txt from local to the project directory
+            if current_iteration == 0:
+                os.system(f"cp task.txt {project_dir}")
+                os.system(f"cp system.txt {project_dir}")
 
             current_iteration += 1
 

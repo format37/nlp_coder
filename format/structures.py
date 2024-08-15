@@ -16,4 +16,6 @@ class Solution(BaseModel):
 
 class Evaluation(BaseModel):
     result_short_overview: str
+    expected_output: str
+    actual_output: str    
     task_complete: bool

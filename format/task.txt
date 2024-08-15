@@ -1,3 +1,82 @@
-Please, implement a CUDA program that calculates the sum of two numbers in a single kernel. The function should take two arguments and return the sum of the two numbers.
-Place the function in a separate file. The main program should call the function and print the result.
-Implement unused variable to get the warning notification in the building script.
+Draft:
+```
+def main():
+    # Small prime for our field
+    p = 17
+
+    # Define curve parameters
+    a = 2
+    b = 2
+
+    # Our curve is y^2 = x^3 + 2x + 2 (mod 17)
+
+    class Point:
+        def __init__(self, x, y, a, b):
+            self.x = x
+            self.y = y
+            self.a = a
+            self.b = b
+
+        def __add__(self, other):
+            if self.a != other.a or self.b != other.b:
+                raise TypeError("Points are not on the same curve")
+            
+            if self.x is None:  # self is the point at infinity
+                return other
+            if other.x is None:  # other is the point at infinity
+                return self
+
+            if self.x == other.x and self.y != other.y:
+                return self.__class__(None, None, self.a, self.b)
+
+            if self.x != other.x:
+                s = (other.y - self.y) * pow(other.x - self.x, -1, p)
+                x3 = (s**2 - self.x - other.x) % p
+                y3 = (s * (self.x - x3) - self.y) % p
+                return self.__class__(x3, y3, self.a, self.b)
+            
+            if self == other:
+                s = (3 * self.x**2 + self.a) * pow(2 * self.y, -1, p)
+                x3 = (s**2 - 2 * self.x) % p
+                y3 = (s * (self.x - x3) - self.y) % p
+                return self.__class__(x3, y3, self.a, self.b)
+
+        def __str__(self):
+            return f"({self.x}, {self.y})"
+
+    def test_point_addition():
+        # Two points on the curve y^2 = x^3 + 2x + 2 (mod 17)
+        P = Point(5, 1, a, b)
+        Q = Point(6, 3, a, b)
+
+        print(f"P = {P}")
+        print(f"Q = {Q}")
+
+        R = P + Q
+        print(f"P + Q = {R}")
+
+        # Test point doubling
+        R = P + P
+        print(f"P + P = {R}")
+
+    test_point_addition()
+
+if __name__ == "__main__":
+    main()
+```
+
+Output:
+```
+P = (5, 1)
+Q = (6, 3)
+P + Q = (10, 6)
+P + P = (6, 3)
+```
+
+Please, reqrite this to Jacobian coordinates. Please note, that the final answer should be in affine coordinates.
+
+Input values: P = (5, 1); Q = (6, 3)
+
+EXPECTED output: P + Q = (10, 6); P + P = (6, 3)
+
+Pay attention in comparison the EXPECTED output with the ACTUAL output. The task is complete ONLY when expected and actual outputs MATCH.
