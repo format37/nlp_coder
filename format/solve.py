@@ -16,11 +16,9 @@ def main():
 
     client = OpenAI()
 
-    user_input = """
-    Please, implement a python3 function that calculates the sum of two numbers. The function should take two arguments and return the sum of the two numbers.
-    Place the function in a separate file.
-    The main file should import the function and call it with the arguments 3 and 5.
-    """
+    # Read user input from task.txt
+    with open("task.txt", "r") as f:
+        user_input = f.read()
 
     completion = client.beta.chat.completions.parse(
         model="gpt-4o-2024-08-06",
