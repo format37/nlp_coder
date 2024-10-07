@@ -1,7 +1,13 @@
 import os
 from openai import OpenAI
 import anthropic
-from structures import Solution, Evaluation
+from structures import (
+    Solution,
+    SolutionRepresentation,
+    Evaluation,
+    EvaluationRepresentation
+)
+from structed_output_extended import structure_output_completion
 from files import (
     create_project_files, 
     create_build_script, 
@@ -15,6 +21,10 @@ import json
 def main():
     
     run_count_limit = 10
+    if "OPENAI_API_KEY" not in os.environ or "ANTHROPIC_API_KEY" not in os.environ:
+        print("One of the API keys is missing. Please provide the API keys. For example:")
+        print("export OPENAI_API_KEY=")
+        print("export ANTHROPIC_API_KEY=")
 
     if "OPENAI_API_KEY" not in os.environ:
         os.environ["OPENAI_API_KEY"] = input("Enter your OpenAI API key (or Use 'export OPENAI_API_KEY=your-api-key' to set the API key): ")
@@ -37,8 +47,15 @@ def main():
     with open("system.txt", "r") as f:
         system_content = f.read() # "You are a software engineer."
     messages=[
-            {"role": "system", "content": system_content},
-            {"role": "user", "content": f"{user_input}"}
+            # {"role": "system", "content": system_content},
+            {"role": "user", "content": 
+                [
+                    {
+                        "type": "text",
+                        "text": f"{user_input}"
+                    }
+                ]
+            }
         ]
 
     current_iteration = 0
@@ -46,10 +63,18 @@ def main():
 
     while not task_complete and current_iteration < run_count_limit:
         print(f"\nIteration: {current_iteration}")
-        completion = client_openai.beta.chat.completions.parse(
-            model="gpt-4o-2024-08-06",
-            messages = messages,
-            response_format=Solution,
+        # Call with max_tokens=16384
+        # completion = client_openai.beta.chat.completions.parse(
+        #     model="gpt-4o-2024-08-06",
+        #     messages = messages,
+        #     max_tokens=16384,
+        #     response_format=Solution,
+        # )
+        completion = structure_output_completion(
+            model="o1-mini",
+            messages=messages,
+            response_format_representation=SolutionRepresentation,
+            response_format=Solution
         )
         message = completion.choices[0].message
         # Extract token usage (prompt, completion, and total tokens)
@@ -119,18 +144,43 @@ def main():
             print(solution_json)
             assistant_answer = solution_json
             # {"role": "assistant", "content": f"{answer}"}
-            messages.append({"role": "assistant", "content": f"{assistant_answer}"})
+            # messages.append({"role": "assistant", "content": f"{assistant_answer}"})
+            messages.append({"role": "assistant", "content": 
+            [
+                {
+                    "type": "text",
+                    "text": f"Classify the following problem and return the result:\n{user_input}"
+                }
+            ]
+            })
 
             # Evaluate solution
             print("\nEvaluating the solution...")
             user_input = f"Please, evaluate the solution: {solution_json}"
-            completion = client_openai.beta.chat.completions.parse(
-                model="gpt-4o-2024-08-06",
+            # Call with max_tokens=16384
+            # completion = client_openai.beta.chat.completions.parse(
+            #     model="gpt-4o-2024-08-06",
+            #     messages=[
+            #         {"role": "system", "content": "You are a software engineer."},
+            #         {"role": "user", "content": f"{user_input}"},
+            #     ],
+            #     max_tokens=16384,
+            #     response_format=Evaluation,
+            # )
+            completion = structure_output_completion(
+                model="o1-mini",
                 messages=[
-                    {"role": "system", "content": "You are a software engineer."},
-                    {"role": "user", "content": f"{user_input}"},
+                    {"role": "user", "content": 
+                        [
+                            {
+                                "type": "text",
+                                "text": f"{user_input}"
+                            }
+                        ]
+                    }
                 ],
-                response_format=Evaluation,
+                response_format_representation=EvaluationRepresentation,
+                response_format=Evaluation
             )
 
             message = completion.choices[0].message
@@ -150,15 +200,18 @@ def main():
                     # claude-3-5-sonnet-20240620
                     # 8192 output tokens is in beta and requires the header anthropic-beta: max-tokens-3-5-sonnet-2024-07-15. 
                     # If the header is not specified, the limit is 4096 tokens.
+                    # Read advisor_content from advisor.txt
+                    with open("advisor.txt", "r") as f:
+                        advisor_content = f.read()
 
                     claude_message = client_anthropic.messages.create(
                         model="claude-3-5-sonnet-20240620",
                         max_tokens=4096,
-                        system="You are a software engineer. You have been asked to conclude what can we do next.",
+                        system=advisor_content,
                         messages=[
                             {
                                 "role": "user",
-                                "content": f"{user_content}. What can we do next?"
+                                "content": f"{user_content}."
                             }
                         ]
                     )
@@ -172,19 +225,35 @@ def main():
                     print(f"claude_response type: {type(claude_response)}")
                     print(f"claude_response: {claude_response}")
                     user_content += claude_response
-                user_answer = {"role": "user", "content": user_content}
-                messages.append(user_answer)                
+                # user_answer = {"role": "user", "content": user_content}
+                user_answer = {"role": "user", "content": 
+                    [
+                        {
+                            "type": "text",
+                            "text": f"{user_content}"
+                        }
+                    ]
+                }
+                messages.append(user_answer)
 
             # Dump messages into {current_iteration}_messages.json
             with open(f"{project_dir}/{current_iteration}_messages.json", "w") as f:
                 f.write(json.dumps(messages, indent=2))
 
-            # If current iteration is 0 Copy task.txt and system.txt from local to the project directory
-            if current_iteration == 0:
-                cmd = f"cp task.txt {project_dir}/task.txt"
+            # Copy task.txt, system.txt and advisor.txt from local to the project directory
+            destination_file_path = f"{project_dir}/task.txt"
+            if not os.path.exists(destination_file_path):
+                cmd = f"cp task.txt {destination_file_path}"
                 print(f'caling: {cmd}')
                 os.system(cmd)
-                cmd = f"cp system.txt {project_dir}/system.txt"
+            destination_file_path = f"{project_dir}/system.txt"
+            if not os.path.exists(destination_file_path):
+                cmd = f"cp system.txt {destination_file_path}"
+                print(f'caling: {cmd}')
+                os.system(cmd)
+            destination_file_path = f"{project_dir}/advisor.txt"
+            if not os.path.exists(destination_file_path):
+                cmd = f"cp advisor.txt {destination_file_path}"
                 print(f'caling: {cmd}')
                 os.system(cmd)
 
