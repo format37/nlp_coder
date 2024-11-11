@@ -11,24 +11,6 @@ from pydantic import BaseModel, Field
 from typing import List
 import asyncio
 
-llm = ChatOllama(model="qwen2.5-coder:7b-instruct")
-
-def python_tool(script: str) -> str:
-    try:
-        script = script.replace('```python', '')
-        while script.endswith("`"):
-            script = script[:-1]
-        print(f"###>>> Running: {script}")
-        # Capture stdout
-        f = StringIO()
-        with redirect_stdout(f):
-            exec(script)
-        output = f.getvalue()
-        
-        return output if output else "Code executed successfully"
-    except Exception as e:
-        return f"Error: {e}"
-
 class TextFileReaderArgs(BaseModel):
     file_list: List[int] = Field(description="List of file IDs")
     
@@ -45,7 +27,7 @@ async def add_tool(a: int, b: int) -> int:
     print(f"add_tool request: a: {a}, b: {b}")
     return a + b
 
-async def main():
+async def conversation():
     add_tool_object = StructuredTool.from_function(
         coroutine=add_tool,
         name="add_two_numbers",
@@ -55,7 +37,8 @@ async def main():
     text_file_reader_tool = StructuredTool.from_function(
         coroutine=text_file_reader,
         name="read_text_file",
-        description = 'Read files from list of ids in format "[id1, id2, ...]\n\n". Input should end with 2 new lines.',
+        # description = 'Read files from list of ids in format "[id1, id2, ...]\n\n". Input should end with 2 new lines.',
+        description = 'Read files from list of ids in format "[id1, id2, ...]".',
         args_schema=TextFileReaderArgs,
     )
     tools = []
@@ -69,6 +52,7 @@ async def main():
                 ("placeholder", "{agent_scratchpad}"),
             ]
         )
+    llm = ChatOllama(model="qwen2.5-coder:7b-instruct")
     agent = create_tool_calling_agent(llm, tools, prompt)
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
     system_prompt = "You are helpful assistant."
@@ -83,8 +67,8 @@ async def main():
         }
     )
     chat_history.append(HumanMessage(content=input))
-    print(f"<< {result['output']}")
     chat_history.append(AIMessage(content=result["output"]))
+    print(f"<< result.output: {result['output']}")
 
     input = "Now please, add these numbers"
     result = await agent_executor.ainvoke(
@@ -95,8 +79,14 @@ async def main():
         }
     )
     chat_history.append(HumanMessage(content=input))
-    print(f"<< {result['output']}")
     chat_history.append(AIMessage(content=result["output"]))
+    print(f"<< result.output: {result['output']}")
+    
     # 65,879,684,205,1002 or 658796842051002
+
+    print(f"chat_history: {chat_history}")
+
+async def main():
+    await conversation()
 
 asyncio.run(main())
